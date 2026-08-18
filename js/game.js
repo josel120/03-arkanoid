@@ -81,6 +81,7 @@
     paddle: initialPaddle,
     ball: initialBall,
     blocks: createBlocks(),
+    explosions: [],
   };
 
   const keys = { left: false, right: false };
@@ -154,10 +155,24 @@
 
       block.alive = false;
       state.score += block.points;
+      state.explosions.push({
+        x: block.x,
+        y: block.y,
+        width: block.width,
+        height: block.height,
+        color: block.color,
+        startTime: performance.now(),
+      });
       resolveBlockBounce(ball, block);
       checkWinCondition();
       break;
     }
+  }
+
+  function updateExplosions() {
+    state.explosions = state.explosions.filter(
+      (explosion) => performance.now() - explosion.startTime < EXPLOSION_DURATION
+    );
   }
 
   function checkWinCondition() {
@@ -213,6 +228,7 @@
     state.score = 0;
     state.lives = 3;
     state.blocks = createBlocks();
+    state.explosions = [];
     resetBallAndPaddle();
     state.status = 'PLAYING';
   }
@@ -268,6 +284,17 @@
     }
   }
 
+  function drawExplosions() {
+    for (const explosion of state.explosions) {
+      const frameIndex = Math.min(
+        3,
+        Math.floor((performance.now() - explosion.startTime) / (EXPLOSION_DURATION / 4))
+      );
+      const frame = EXPLOSION_FRAMES[explosion.color][frameIndex];
+      drawFrame(ctx, frame, explosion.x, explosion.y, explosion.width, explosion.height);
+    }
+  }
+
   function drawStartOverlay() {
     ctx.fillStyle = '#fff';
     ctx.font = '20px sans-serif';
@@ -315,6 +342,7 @@
   function render() {
     drawBackground();
     drawBlocks();
+    drawExplosions();
     drawPaddle();
     drawBall();
 
@@ -333,6 +361,7 @@
     if (state.status === 'PLAYING') {
       updatePaddleFromKeys();
       updateBall();
+      updateExplosions();
     }
   }
 

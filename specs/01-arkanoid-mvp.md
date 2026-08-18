@@ -82,15 +82,15 @@ Convenciones:
 
 ## Acceptance criteria
 
-- [ ] Abrir `index.html` vía servidor estático (`python -m http.server`) muestra el canvas 480x640 centrado con la pantalla de inicio, sin errores en consola.
-- [ ] Al presionar una tecla o hacer clic en la pantalla de inicio, comienza la partida: la bola se mueve, se ven los 40 bloques (5 filas x 8 columnas) y el HUD muestra score=0 y vidas=3.
-- [ ] La pala se mueve con flechas izquierda/derecha, A/D y con el mouse, sin salir de los límites del canvas.
-- [ ] La bola rebota correctamente en las paredes izquierda, superior y derecha, y en la pala con un ángulo que depende del punto de impacto.
-- [ ] Al golpear un bloque, este desaparece, la bola rebota, y el score del HUD aumenta exactamente el valor de puntos asignado al color de ese bloque.
-- [ ] Si la bola cae por debajo de la pala, se pierde una vida, el HUD refleja las vidas restantes, y bola/pala vuelven a su posición inicial.
-- [ ] Al perder la tercera vida aparece la pantalla de Game Over con el score final; presionar una tecla o hacer clic reinicia la partida completa (score=0, vidas=3, 40 bloques de nuevo).
-- [ ] Al destruir los 40 bloques aparece la pantalla de Victoria con el score final; presionar una tecla o hacer clic reinicia la partida completa.
-- [ ] No se agregan dependencias externas: sin `npm`, sin CDN, sin bundlers; todo corre con `<script>` clásicos y `assets/spritesheet.js` se usa sin modificar su formato de globals (`SPRITES`, `loadSpritesheet`, `drawSprite`).
+- [x] Abrir `index.html` vía servidor estático (`python -m http.server`) muestra el canvas 480x640 centrado con la pantalla de inicio, sin errores en consola.
+- [x] Al presionar una tecla o hacer clic en la pantalla de inicio, comienza la partida: la bola se mueve, se ven los 40 bloques (5 filas x 8 columnas) y el HUD muestra score=0 y vidas=3.
+- [x] La pala se mueve con flechas izquierda/derecha, A/D y con el mouse, sin salir de los límites del canvas.
+- [x] La bola rebota correctamente en las paredes izquierda, superior y derecha, y en la pala con un ángulo que depende del punto de impacto.
+- [x] Al golpear un bloque, este desaparece, la bola rebota, y el score del HUD aumenta exactamente el valor de puntos asignado al color de ese bloque.
+- [x] Si la bola cae por debajo de la pala, se pierde una vida, el HUD refleja las vidas restantes, y bola/pala vuelven a su posición inicial.
+- [x] Al perder la tercera vida aparece la pantalla de Game Over con el score final; presionar una tecla o hacer clic reinicia la partida completa (score=0, vidas=3, 40 bloques de nuevo).
+- [x] Al destruir los 40 bloques aparece la pantalla de Victoria con el score final; presionar una tecla o hacer clic reinicia la partida completa.
+- [x] No se agregan dependencias externas: sin `npm`, sin CDN, sin bundlers; todo corre con `<script>` clásicos y `assets/spritesheet.js` se usa sin modificar su formato de globals (`SPRITES`, `loadSpritesheet`, `drawSprite`).
 
 ---
 
