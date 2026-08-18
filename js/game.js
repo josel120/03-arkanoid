@@ -67,6 +67,11 @@
     ],
   ];
 
+  const PAUSE_MENU_OPTIONS = ['Continuar', 'Reiniciar nivel', 'Elegir nivel', 'Terminar partida'];
+
+  let pauseMenuRects = [];
+  let levelSelectRects = [];
+
   const ballBounceSound = new Audio('assets/sounds/ball-bounce.mp3');
   const breakSound = new Audio('assets/sounds/break-sound.mp3');
 
@@ -129,7 +134,7 @@
   const initialBall = createInitialBall(initialPaddle);
 
   const state = {
-    status: 'START', // "START" | "PLAYING" | "LEVEL_TRANSITION" | "GAME_OVER" | "WIN"
+    status: 'START', // "START" | "PLAYING" | "PAUSED" | "PAUSED_LEVEL_SELECT" | "LEVEL_TRANSITION" | "GAME_OVER" | "WIN"
     level: 1, // 1..5
     score: 0,
     lives: 3,
@@ -137,6 +142,8 @@
     ball: initialBall,
     blocks: createBlocks(1),
     explosions: [],
+    pauseMenuIndex: 0, // 0..3, opción resaltada en el menú de pausa
+    levelSelectIndex: 0, // 0..4, nivel resaltado en "Elegir nivel"
   };
 
   const keys = { left: false, right: false };
@@ -311,9 +318,72 @@
     }
   }
 
+  function confirmPauseMenuSelection() {
+    if (state.pauseMenuIndex === 0) {
+      state.status = 'PLAYING';
+    } else if (state.pauseMenuIndex === 1) {
+      state.blocks = createBlocks(state.level);
+      state.explosions = [];
+      resetBallAndPaddle();
+      state.status = 'PLAYING';
+    } else if (state.pauseMenuIndex === 2) {
+      state.levelSelectIndex = state.level - 1;
+      state.status = 'PAUSED_LEVEL_SELECT';
+    } else if (state.pauseMenuIndex === 3) {
+      state.status = 'GAME_OVER';
+    }
+  }
+
+  function confirmLevelSelectSelection() {
+    state.level = state.levelSelectIndex + 1;
+    state.score = 0;
+    state.lives = 3;
+    state.blocks = createBlocks(state.level);
+    state.explosions = [];
+    resetBallAndPaddle();
+    state.status = 'PLAYING';
+  }
+
+  function isPauseKey(key) {
+    return key === 'Escape' || key === 'p' || key === 'P';
+  }
+
   function handleKeyDown(e) {
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
+
+    if (state.status === 'PLAYING' && isPauseKey(e.key)) {
+      state.pauseMenuIndex = 0;
+      state.status = 'PAUSED';
+      return;
+    }
+
+    if (state.status === 'PAUSED') {
+      if (isPauseKey(e.key)) {
+        state.status = 'PLAYING';
+      } else if (e.key === 'ArrowUp') {
+        state.pauseMenuIndex = (state.pauseMenuIndex + PAUSE_MENU_OPTIONS.length - 1) % PAUSE_MENU_OPTIONS.length;
+      } else if (e.key === 'ArrowDown') {
+        state.pauseMenuIndex = (state.pauseMenuIndex + 1) % PAUSE_MENU_OPTIONS.length;
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        confirmPauseMenuSelection();
+      }
+      return;
+    }
+
+    if (state.status === 'PAUSED_LEVEL_SELECT') {
+      if (isPauseKey(e.key)) {
+        state.status = 'PAUSED';
+      } else if (e.key === 'ArrowUp') {
+        state.levelSelectIndex = (state.levelSelectIndex + LEVELS.length - 1) % LEVELS.length;
+      } else if (e.key === 'ArrowDown') {
+        state.levelSelectIndex = (state.levelSelectIndex + 1) % LEVELS.length;
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        confirmLevelSelectSelection();
+      }
+      return;
+    }
+
     handleInput();
   }
 
@@ -329,10 +399,50 @@
     clampPaddle();
   }
 
+  function hitTestRects(rects, mouseX, mouseY) {
+    for (const rect of rects) {
+      if (
+        mouseX >= rect.x &&
+        mouseX <= rect.x + rect.width &&
+        mouseY >= rect.y &&
+        mouseY <= rect.y + rect.height
+      ) {
+        return rect.index;
+      }
+    }
+    return -1;
+  }
+
+  function handleCanvasClick(e) {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    if (state.status === 'PAUSED') {
+      const index = hitTestRects(pauseMenuRects, mouseX, mouseY);
+      if (index !== -1) {
+        state.pauseMenuIndex = index;
+        confirmPauseMenuSelection();
+      }
+      return;
+    }
+
+    if (state.status === 'PAUSED_LEVEL_SELECT') {
+      const index = hitTestRects(levelSelectRects, mouseX, mouseY);
+      if (index !== -1) {
+        state.levelSelectIndex = index;
+        confirmLevelSelectSelection();
+      }
+      return;
+    }
+
+    handleInput();
+  }
+
   document.addEventListener('keydown', handleKeyDown);
   document.addEventListener('keyup', handleKeyUp);
   canvas.addEventListener('mousemove', handleMouseMove);
-  canvas.addEventListener('click', handleInput);
+  canvas.addEventListener('click', handleCanvasClick);
 
   function drawBackground() {
     ctx.fillStyle = '#000';
@@ -413,6 +523,71 @@
     );
   }
 
+  function drawPauseOverlay() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = '28px sans-serif';
+    ctx.fillStyle = '#fff';
+    ctx.fillText('Pausa', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 80);
+
+    pauseMenuRects = [];
+    const optionHeight = 34;
+    const startY = CANVAS_HEIGHT / 2 - 20;
+
+    ctx.font = '18px sans-serif';
+    PAUSE_MENU_OPTIONS.forEach((label, index) => {
+      const y = startY + index * optionHeight;
+      const isSelected = index === state.pauseMenuIndex;
+      ctx.fillStyle = isSelected ? '#ffd700' : '#fff';
+      ctx.fillText(isSelected ? `> ${label}` : label, CANVAS_WIDTH / 2, y);
+
+      pauseMenuRects.push({
+        x: CANVAS_WIDTH / 2 - 120,
+        y: y - optionHeight / 2,
+        width: 240,
+        height: optionHeight,
+        index,
+      });
+    });
+  }
+
+  function drawLevelSelectOverlay() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = '28px sans-serif';
+    ctx.fillStyle = '#fff';
+    ctx.fillText('Elegir nivel', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 100);
+
+    levelSelectRects = [];
+    const optionHeight = 30;
+    const startY = CANVAS_HEIGHT / 2 - 30;
+
+    ctx.font = '18px sans-serif';
+    for (let index = 0; index < LEVELS.length; index++) {
+      const y = startY + index * optionHeight;
+      const isSelected = index === state.levelSelectIndex;
+      const label = `Nivel ${index + 1}`;
+      ctx.fillStyle = isSelected ? '#ffd700' : '#fff';
+      ctx.fillText(isSelected ? `> ${label}` : label, CANVAS_WIDTH / 2, y);
+
+      levelSelectRects.push({
+        x: CANVAS_WIDTH / 2 - 120,
+        y: y - optionHeight / 2,
+        width: 240,
+        height: optionHeight,
+        index,
+      });
+    }
+
+    ctx.font = '14px sans-serif';
+    ctx.fillStyle = '#fff';
+    ctx.fillText('Escape / P para volver', CANVAS_WIDTH / 2, startY + LEVELS.length * optionHeight + 20);
+  }
+
   function drawHUD() {
     ctx.fillStyle = '#fff';
     ctx.font = '16px sans-serif';
@@ -445,6 +620,12 @@
       drawWinOverlay();
     } else if (state.status === 'LEVEL_TRANSITION') {
       drawLevelTransitionOverlay();
+    } else if (state.status === 'PAUSED') {
+      drawHUD();
+      drawPauseOverlay();
+    } else if (state.status === 'PAUSED_LEVEL_SELECT') {
+      drawHUD();
+      drawLevelSelectOverlay();
     }
   }
 
