@@ -7,6 +7,22 @@
   const PADDLE_SPEED = 6;
   const MAX_BOUNCE_ANGLE = Math.PI / 3; // 60°, medido desde la vertical
 
+  const BLOCK_ROWS = 5;
+  const BLOCK_COLS = 8;
+  const BLOCK_WIDTH = 56;
+  const BLOCK_HEIGHT = 24;
+  const BLOCK_GAP = 2;
+  const BLOCK_TOP_OFFSET = 60;
+  const BLOCK_ROW_COLORS = ['red', 'hotpink', 'magenta', 'yellow', 'green'];
+
+  const BLOCK_POINTS = {
+    red: 70,
+    hotpink: 60,
+    magenta: 50,
+    yellow: 40,
+    green: 30,
+  };
+
   function createInitialPaddle() {
     const width = 90;
     const height = 14;
@@ -31,6 +47,30 @@
     };
   }
 
+  function createBlocks() {
+    const gridWidth = BLOCK_COLS * BLOCK_WIDTH + (BLOCK_COLS - 1) * BLOCK_GAP;
+    const leftMargin = (CANVAS_WIDTH - gridWidth) / 2;
+    const blocks = [];
+
+    for (let row = 0; row < BLOCK_ROWS; row++) {
+      const color = BLOCK_ROW_COLORS[row];
+      const points = BLOCK_POINTS[color];
+      for (let col = 0; col < BLOCK_COLS; col++) {
+        blocks.push({
+          x: leftMargin + col * (BLOCK_WIDTH + BLOCK_GAP),
+          y: BLOCK_TOP_OFFSET + row * (BLOCK_HEIGHT + BLOCK_GAP),
+          width: BLOCK_WIDTH,
+          height: BLOCK_HEIGHT,
+          color,
+          points,
+          alive: true,
+        });
+      }
+    }
+
+    return blocks;
+  }
+
   const initialPaddle = createInitialPaddle();
   const initialBall = createInitialBall(initialPaddle);
 
@@ -40,7 +80,7 @@
     lives: 3,
     paddle: initialPaddle,
     ball: initialBall,
-    blocks: [],
+    blocks: createBlocks(),
   };
 
   const keys = { left: false, right: false };
@@ -75,6 +115,43 @@
 
     if (isCollidingWithPaddle(ball)) {
       reflectOffPaddle(ball);
+    }
+
+    checkBlockCollision(ball);
+  }
+
+  function checkBlockCollision(ball) {
+    for (const block of state.blocks) {
+      if (!block.alive) continue;
+
+      const isColliding =
+        ball.x < block.x + block.width &&
+        ball.x + ball.width > block.x &&
+        ball.y < block.y + block.height &&
+        ball.y + ball.height > block.y;
+
+      if (!isColliding) continue;
+
+      block.alive = false;
+      state.score += block.points;
+      resolveBlockBounce(ball, block);
+      break;
+    }
+  }
+
+  function resolveBlockBounce(ball, block) {
+    const overlapLeft = ball.x + ball.width - block.x;
+    const overlapRight = block.x + block.width - ball.x;
+    const overlapTop = ball.y + ball.height - block.y;
+    const overlapBottom = block.y + block.height - ball.y;
+
+    const minOverlapX = Math.min(overlapLeft, overlapRight);
+    const minOverlapY = Math.min(overlapTop, overlapBottom);
+
+    if (minOverlapX < minOverlapY) {
+      ball.dx = -ball.dx;
+    } else {
+      ball.dy = -ball.dy;
     }
   }
 
@@ -147,6 +224,13 @@
     drawSprite(ctx, 'ball', state.ball.x, state.ball.y, state.ball.width, state.ball.height);
   }
 
+  function drawBlocks() {
+    for (const block of state.blocks) {
+      if (!block.alive) continue;
+      drawSprite(ctx, `block_${block.color}`, block.x, block.y, block.width, block.height);
+    }
+  }
+
   function drawStartOverlay() {
     ctx.fillStyle = '#fff';
     ctx.font = '20px sans-serif';
@@ -157,6 +241,7 @@
 
   function render() {
     drawBackground();
+    drawBlocks();
     drawPaddle();
     drawBall();
 
