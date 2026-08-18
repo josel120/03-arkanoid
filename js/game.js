@@ -155,7 +155,14 @@
       block.alive = false;
       state.score += block.points;
       resolveBlockBounce(ball, block);
+      checkWinCondition();
       break;
+    }
+  }
+
+  function checkWinCondition() {
+    if (state.blocks.every((block) => !block.alive)) {
+      state.status = 'WIN';
     }
   }
 
@@ -202,16 +209,26 @@
     ball.y = paddle.y - ball.height;
   }
 
-  function startGame() {
+  function restartGame() {
+    state.score = 0;
+    state.lives = 3;
+    state.blocks = createBlocks();
+    resetBallAndPaddle();
+    state.status = 'PLAYING';
+  }
+
+  function handleInput() {
     if (state.status === 'START') {
       state.status = 'PLAYING';
+    } else if (state.status === 'GAME_OVER' || state.status === 'WIN') {
+      restartGame();
     }
   }
 
   function handleKeyDown(e) {
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
-    startGame();
+    handleInput();
   }
 
   function handleKeyUp(e) {
@@ -229,7 +246,7 @@
   document.addEventListener('keydown', handleKeyDown);
   document.addEventListener('keyup', handleKeyUp);
   canvas.addEventListener('mousemove', handleMouseMove);
-  canvas.addEventListener('click', startGame);
+  canvas.addEventListener('click', handleInput);
 
   function drawBackground() {
     ctx.fillStyle = '#000';
@@ -271,6 +288,18 @@
     ctx.fillText(`Score final: ${state.score}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 20);
   }
 
+  function drawWinOverlay() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = '28px sans-serif';
+    ctx.fillText('¡Victoria!', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 20);
+    ctx.font = '18px sans-serif';
+    ctx.fillText(`Score final: ${state.score}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 20);
+  }
+
   function drawHUD() {
     ctx.fillStyle = '#fff';
     ctx.font = '16px sans-serif';
@@ -295,6 +324,8 @@
       drawStartOverlay();
     } else if (state.status === 'GAME_OVER') {
       drawGameOverOverlay();
+    } else if (state.status === 'WIN') {
+      drawWinOverlay();
     }
   }
 
