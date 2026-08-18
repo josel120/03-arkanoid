@@ -1,6 +1,6 @@
 # SPEC 04 — Sistema de 5 niveles
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 01
 > **Date:** 2026-08-18
 > **Objective:** Reemplazar el nivel único del MVP por una secuencia de 5 niveles con distinto patrón de bloques cada uno, conservando score y vidas entre niveles y mostrando una pantalla de Victoria final tras completar el quinto.
@@ -86,15 +86,15 @@ Convenciones:
 
 ## Acceptance criteria
 
-- [ ] Al iniciar la partida se ve el patrón de bloques del Nivel 1, distinto del grid uniforme original del MVP.
-- [ ] El HUD muestra `Nivel: X/5` junto al score y las vidas durante `PLAYING`.
-- [ ] Al destruir todos los bloques de un nivel que no sea el 5º, aparece un overlay de transición indicando el nivel completado; presionar una tecla o hacer clic genera el siguiente nivel y vuelve a `PLAYING`.
-- [ ] Al pasar de un nivel al siguiente, `score` y `lives` conservan su valor exacto previo (no se resetean).
-- [ ] Cada uno de los 5 niveles tiene un patrón de bloques visualmente distinto de los otros 4.
-- [ ] Al destruir todos los bloques del Nivel 5, aparece la pantalla de Victoria existente con el score final acumulado de los 5 niveles.
-- [ ] Perder la tercera vida en cualquier nivel (1 a 5) muestra Game Over con el score acumulado hasta ese momento, igual que en el MVP.
-- [ ] Reiniciar la partida desde Game Over o Victoria vuelve al Nivel 1 (`Nivel: 1/5` en el HUD) con score en 0 y 3 vidas.
-- [ ] No se agregan dependencias externas ni se modifica `assets/spritesheet.js`.
+- [x] Al iniciar la partida se ve el patrón de bloques del Nivel 1, distinto del grid uniforme original del MVP.
+- [x] El HUD muestra `Nivel: X/5` junto al score y las vidas durante `PLAYING`.
+- [x] Al destruir todos los bloques de un nivel que no sea el 5º, aparece un overlay de transición indicando el nivel completado; presionar una tecla o hacer clic genera el siguiente nivel y vuelve a `PLAYING`.
+- [x] Al pasar de un nivel al siguiente, `score` y `lives` conservan su valor exacto previo (no se resetean).
+- [x] Cada uno de los 5 niveles tiene un patrón de bloques visualmente distinto de los otros 4.
+- [x] Al destruir todos los bloques del Nivel 5, aparece la pantalla de Victoria existente con el score final acumulado de los 5 niveles.
+- [x] Perder la tercera vida en cualquier nivel (1 a 5) muestra Game Over con el score acumulado hasta ese momento, igual que en el MVP.
+- [x] Reiniciar la partida desde Game Over o Victoria vuelve al Nivel 1 (`Nivel: 1/5` en el HUD) con score en 0 y 3 vidas.
+- [x] No se agregan dependencias externas ni se modifica `assets/spritesheet.js`.
 
 ---
 

@@ -13,7 +13,6 @@
   const BLOCK_HEIGHT = 24;
   const BLOCK_GAP = 2;
   const BLOCK_TOP_OFFSET = 60;
-  const BLOCK_ROW_COLORS = ['red', 'hotpink', 'magenta', 'yellow', 'green'];
 
   const BLOCK_POINTS = {
     red: 70,
@@ -22,6 +21,51 @@
     yellow: 40,
     green: 30,
   };
+
+  // LEVELS[i] es el grid (5 filas x 8 columnas) del nivel i+1.
+  // Cada celda es un color de bloque o null (celda vacía, sin bloque).
+  const LEVELS = [
+    // Nivel 1: pirámide
+    [
+      [null, null, null, 'red', 'red', null, null, null],
+      [null, null, 'hotpink', 'hotpink', 'hotpink', 'hotpink', null, null],
+      [null, 'magenta', 'magenta', 'magenta', 'magenta', 'magenta', 'magenta', null],
+      ['yellow', 'yellow', 'yellow', 'yellow', 'yellow', 'yellow', 'yellow', 'yellow'],
+      ['green', 'green', 'green', 'green', 'green', 'green', 'green', 'green'],
+    ],
+    // Nivel 2: tablero de ajedrez
+    [
+      ['red', null, 'red', null, 'red', null, 'red', null],
+      [null, 'hotpink', null, 'hotpink', null, 'hotpink', null, 'hotpink'],
+      ['magenta', null, 'magenta', null, 'magenta', null, 'magenta', null],
+      [null, 'yellow', null, 'yellow', null, 'yellow', null, 'yellow'],
+      ['green', null, 'green', null, 'green', null, 'green', null],
+    ],
+    // Nivel 3: marco/borde
+    [
+      ['red', 'red', 'red', 'red', 'red', 'red', 'red', 'red'],
+      ['hotpink', null, null, null, null, null, null, 'hotpink'],
+      ['magenta', null, null, null, null, null, null, 'magenta'],
+      ['yellow', null, null, null, null, null, null, 'yellow'],
+      ['green', 'green', 'green', 'green', 'green', 'green', 'green', 'green'],
+    ],
+    // Nivel 4: portal (barras llenas con hueco central)
+    [
+      ['red', 'red', 'red', 'red', 'red', 'red', 'red', 'red'],
+      ['hotpink', 'hotpink', 'hotpink', 'hotpink', 'hotpink', 'hotpink', 'hotpink', 'hotpink'],
+      ['magenta', null, null, null, null, null, null, 'magenta'],
+      ['yellow', 'yellow', 'yellow', 'yellow', 'yellow', 'yellow', 'yellow', 'yellow'],
+      ['green', 'green', 'green', 'green', 'green', 'green', 'green', 'green'],
+    ],
+    // Nivel 5: grid completo
+    [
+      ['red', 'red', 'red', 'red', 'red', 'red', 'red', 'red'],
+      ['hotpink', 'hotpink', 'hotpink', 'hotpink', 'hotpink', 'hotpink', 'hotpink', 'hotpink'],
+      ['magenta', 'magenta', 'magenta', 'magenta', 'magenta', 'magenta', 'magenta', 'magenta'],
+      ['yellow', 'yellow', 'yellow', 'yellow', 'yellow', 'yellow', 'yellow', 'yellow'],
+      ['green', 'green', 'green', 'green', 'green', 'green', 'green', 'green'],
+    ],
+  ];
 
   const ballBounceSound = new Audio('assets/sounds/ball-bounce.mp3');
   const breakSound = new Audio('assets/sounds/break-sound.mp3');
@@ -55,22 +99,24 @@
     };
   }
 
-  function createBlocks() {
+  function createBlocks(level) {
     const gridWidth = BLOCK_COLS * BLOCK_WIDTH + (BLOCK_COLS - 1) * BLOCK_GAP;
     const leftMargin = (CANVAS_WIDTH - gridWidth) / 2;
+    const grid = LEVELS[level - 1];
     const blocks = [];
 
     for (let row = 0; row < BLOCK_ROWS; row++) {
-      const color = BLOCK_ROW_COLORS[row];
-      const points = BLOCK_POINTS[color];
       for (let col = 0; col < BLOCK_COLS; col++) {
+        const color = grid[row][col];
+        if (color === null) continue;
+
         blocks.push({
           x: leftMargin + col * (BLOCK_WIDTH + BLOCK_GAP),
           y: BLOCK_TOP_OFFSET + row * (BLOCK_HEIGHT + BLOCK_GAP),
           width: BLOCK_WIDTH,
           height: BLOCK_HEIGHT,
           color,
-          points,
+          points: BLOCK_POINTS[color],
           alive: true,
         });
       }
@@ -83,12 +129,13 @@
   const initialBall = createInitialBall(initialPaddle);
 
   const state = {
-    status: 'START', // "START" | "PLAYING" | "GAME_OVER" | "WIN"
+    status: 'START', // "START" | "PLAYING" | "LEVEL_TRANSITION" | "GAME_OVER" | "WIN"
+    level: 1, // 1..5
     score: 0,
     lives: 3,
     paddle: initialPaddle,
     ball: initialBall,
-    blocks: createBlocks(),
+    blocks: createBlocks(1),
     explosions: [],
   };
 
@@ -189,7 +236,11 @@
   }
 
   function checkWinCondition() {
-    if (state.blocks.every((block) => !block.alive)) {
+    if (!state.blocks.every((block) => !block.alive)) return;
+
+    if (state.level < LEVELS.length) {
+      state.status = 'LEVEL_TRANSITION';
+    } else {
       state.status = 'WIN';
     }
   }
@@ -240,7 +291,8 @@
   function restartGame() {
     state.score = 0;
     state.lives = 3;
-    state.blocks = createBlocks();
+    state.level = 1;
+    state.blocks = createBlocks(state.level);
     state.explosions = [];
     resetBallAndPaddle();
     state.status = 'PLAYING';
@@ -251,6 +303,11 @@
       state.status = 'PLAYING';
     } else if (state.status === 'GAME_OVER' || state.status === 'WIN') {
       restartGame();
+    } else if (state.status === 'LEVEL_TRANSITION') {
+      state.level += 1;
+      state.blocks = createBlocks(state.level);
+      resetBallAndPaddle();
+      state.status = 'PLAYING';
     }
   }
 
@@ -340,6 +397,22 @@
     ctx.fillText(`Score final: ${state.score}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 20);
   }
 
+  function drawLevelTransitionOverlay() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = '28px sans-serif';
+    ctx.fillText(`¡Nivel ${state.level} completado!`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 20);
+    ctx.font = '18px sans-serif';
+    ctx.fillText(
+      'Presiona una tecla o haz clic para continuar',
+      CANVAS_WIDTH / 2,
+      CANVAS_HEIGHT / 2 + 20
+    );
+  }
+
   function drawHUD() {
     ctx.fillStyle = '#fff';
     ctx.font = '16px sans-serif';
@@ -347,6 +420,9 @@
 
     ctx.textAlign = 'left';
     ctx.fillText(`Score: ${state.score}`, 10, 10);
+
+    ctx.textAlign = 'center';
+    ctx.fillText(`Nivel: ${state.level}/${LEVELS.length}`, CANVAS_WIDTH / 2, 10);
 
     ctx.textAlign = 'right';
     ctx.fillText(`Vidas: ${state.lives}`, CANVAS_WIDTH - 10, 10);
@@ -367,6 +443,8 @@
       drawGameOverOverlay();
     } else if (state.status === 'WIN') {
       drawWinOverlay();
+    } else if (state.status === 'LEVEL_TRANSITION') {
+      drawLevelTransitionOverlay();
     }
   }
 
