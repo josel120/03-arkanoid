@@ -5,6 +5,7 @@
   const CANVAS_WIDTH = canvas.width;
   const CANVAS_HEIGHT = canvas.height;
   const PADDLE_SPEED = 6;
+  const MAX_BOUNCE_ANGLE = Math.PI / 3; // 60°, medido desde la vertical
 
   function createInitialPaddle() {
     const width = 90;
@@ -71,6 +72,37 @@
       ball.y = 0;
       ball.dy = -ball.dy;
     }
+
+    if (isCollidingWithPaddle(ball)) {
+      reflectOffPaddle(ball);
+    }
+  }
+
+  function isCollidingWithPaddle(ball) {
+    const paddle = state.paddle;
+    return (
+      ball.dy > 0 &&
+      ball.x < paddle.x + paddle.width &&
+      ball.x + ball.width > paddle.x &&
+      ball.y < paddle.y + paddle.height &&
+      ball.y + ball.height > paddle.y
+    );
+  }
+
+  function reflectOffPaddle(ball) {
+    const paddle = state.paddle;
+    const speed = Math.sqrt(ball.dx * ball.dx + ball.dy * ball.dy);
+    const paddleCenterX = paddle.x + paddle.width / 2;
+    const ballCenterX = ball.x + ball.width / 2;
+    const normalizedIntersect = Math.max(
+      -1,
+      Math.min(1, (ballCenterX - paddleCenterX) / (paddle.width / 2))
+    );
+    const bounceAngle = normalizedIntersect * MAX_BOUNCE_ANGLE;
+
+    ball.dx = speed * Math.sin(bounceAngle);
+    ball.dy = -speed * Math.cos(bounceAngle);
+    ball.y = paddle.y - ball.height;
   }
 
   function startGame() {
