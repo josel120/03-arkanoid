@@ -118,6 +118,26 @@
     }
 
     checkBlockCollision(ball);
+
+    if (ball.y > CANVAS_HEIGHT) {
+      loseLife();
+    }
+  }
+
+  function resetBallAndPaddle() {
+    const paddle = createInitialPaddle();
+    const ball = createInitialBall(paddle);
+    state.paddle = paddle;
+    state.ball = ball;
+  }
+
+  function loseLife() {
+    state.lives -= 1;
+    resetBallAndPaddle();
+
+    if (state.lives <= 0) {
+      state.status = 'GAME_OVER';
+    }
   }
 
   function checkBlockCollision(ball) {
@@ -239,14 +259,42 @@
     ctx.fillText('Presiona una tecla o haz clic para jugar', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
   }
 
+  function drawGameOverOverlay() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = '28px sans-serif';
+    ctx.fillText('Game Over', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 20);
+    ctx.font = '18px sans-serif';
+    ctx.fillText(`Score final: ${state.score}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 20);
+  }
+
+  function drawHUD() {
+    ctx.fillStyle = '#fff';
+    ctx.font = '16px sans-serif';
+    ctx.textBaseline = 'top';
+
+    ctx.textAlign = 'left';
+    ctx.fillText(`Score: ${state.score}`, 10, 10);
+
+    ctx.textAlign = 'right';
+    ctx.fillText(`Vidas: ${state.lives}`, CANVAS_WIDTH - 10, 10);
+  }
+
   function render() {
     drawBackground();
     drawBlocks();
     drawPaddle();
     drawBall();
 
-    if (state.status === 'START') {
+    if (state.status === 'PLAYING') {
+      drawHUD();
+    } else if (state.status === 'START') {
       drawStartOverlay();
+    } else if (state.status === 'GAME_OVER') {
+      drawGameOverOverlay();
     }
   }
 
