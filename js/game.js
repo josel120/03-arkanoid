@@ -23,6 +23,14 @@
     green: 30,
   };
 
+  const ballBounceSound = new Audio('assets/sounds/ball-bounce.mp3');
+  const breakSound = new Audio('assets/sounds/break-sound.mp3');
+
+  function playSound(audio) {
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
+  }
+
   function createInitialPaddle() {
     const width = 90;
     const height = 14;
@@ -104,18 +112,22 @@
     if (ball.x <= 0) {
       ball.x = 0;
       ball.dx = -ball.dx;
+      playSound(ballBounceSound);
     } else if (ball.x + ball.width >= CANVAS_WIDTH) {
       ball.x = CANVAS_WIDTH - ball.width;
       ball.dx = -ball.dx;
+      playSound(ballBounceSound);
     }
 
     if (ball.y <= 0) {
       ball.y = 0;
       ball.dy = -ball.dy;
+      playSound(ballBounceSound);
     }
 
     if (isCollidingWithPaddle(ball)) {
       reflectOffPaddle(ball);
+      playSound(ballBounceSound);
     }
 
     checkBlockCollision(ball);
@@ -154,6 +166,7 @@
       if (!isColliding) continue;
 
       block.alive = false;
+      playSound(breakSound);
       state.score += block.points;
       state.explosions.push({
         x: block.x,

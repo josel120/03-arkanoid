@@ -1,6 +1,6 @@
 # SPEC 03 — Sonido de rebote y rotura de bloques
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 01
 > **Date:** 2026-08-18
 > **Objective:** Reproducir `assets/sounds/ball-bounce.mp3` en cada rebote de la bola (paredes y pala) y `assets/sounds/break-sound.mp3` al destruirse un bloque, usando `<audio>`/`Audio` nativo sin dependencias.
@@ -59,12 +59,12 @@ Convenciones:
 
 ## Acceptance criteria
 
-- [ ] Al rebotar la bola en la pared izquierda, superior, derecha, o en la pala, se reproduce `ball-bounce.mp3`.
-- [ ] Al destruirse un bloque, se reproduce `break-sound.mp3` y no `ball-bounce.mp3` para ese mismo evento de colisión.
-- [ ] Un nuevo rebote mientras `ball-bounce.mp3` sigue sonando corta el sonido en curso y lo reproduce de nuevo desde el inicio; lo mismo aplica a roturas consecutivas con `break-sound.mp3`.
-- [ ] Los objetos `Audio` se crean y empiezan a precargarse junto con `loadSpritesheet`, antes de que arranque `requestAnimationFrame(loop)`.
-- [ ] No hay ningún control de mute/volumen visible en el juego; los sonidos siempre están activos a volumen por defecto.
-- [ ] No se agregan dependencias externas ni se modifica `assets/spritesheet.js`.
+- [x] Al rebotar la bola en la pared izquierda, superior, derecha, o en la pala, se reproduce `ball-bounce.mp3`.
+- [x] Al destruirse un bloque, se reproduce `break-sound.mp3` y no `ball-bounce.mp3` para ese mismo evento de colisión.
+- [x] Un nuevo rebote mientras `ball-bounce.mp3` sigue sonando corta el sonido en curso y lo reproduce de nuevo desde el inicio; lo mismo aplica a roturas consecutivas con `break-sound.mp3`.
+- [x] Los objetos `Audio` se crean y empiezan a precargarse junto con `loadSpritesheet`, antes de que arranque `requestAnimationFrame(loop)`.
+- [x] No hay ningún control de mute/volumen visible en el juego; los sonidos siempre están activos a volumen por defecto.
+- [x] No se agregan dependencias externas ni se modifica `assets/spritesheet.js`.
 
 ---
 
